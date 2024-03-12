@@ -129,7 +129,12 @@ classdef Plotter < Module
             end
 
             legend(obj.UIAxFFT);
-            xlim(obj.UIAxFFT,[60,6e+3]);
+            xlim(obj.UIAxFFT,[60,obj.Parent.DAQ.MaxFreq]);
+        end
+
+        function Update(obj)
+            PlotOsc(obj);
+            PlotFFT(obj);
         end
         
         function PlotStatus(obj)

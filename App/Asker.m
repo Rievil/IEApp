@@ -95,6 +95,7 @@ classdef Asker < handle
         
         function StopReading(obj)
             if obj.IsFig==true
+                stop(obj.DAQ);
                 delete(obj.Fig);
             end
         end
@@ -197,7 +198,7 @@ classdef Asker < handle
             end
             close(d);
             
-            uialert(obj.Asker.Fig,'Meas succesfully saved','Success','Icon','success');
+            uialert(obj.Fig,'Meas succesfully saved','Success','Icon','success');
 %             close(message);
         end
         
@@ -232,7 +233,7 @@ classdef Asker < handle
 
             dim=[Pix_SS(3)/2-obj.FigDim(1)/2,Pix_SS(4)/2-obj.FigDim(2)/2,obj.FigDim(1),obj.FigDim(2)];
             obj.Fig=uifigure('Position',dim,'CloseRequestFcn',@obj.MFigClosed,'WindowKeyPressFcn',@obj.MKeyCallback,...
-                'WindowStyle','alwaysontop');
+                'WindowStyle','normal');
             g=uigridlayout(obj.Fig);
             g.RowHeight = {25,100,'1x',25};
             g.ColumnWidth = {300,'1x',250};
@@ -378,7 +379,8 @@ classdef Asker < handle
                 if obj.LockLabels=='2'
                     obj.Marker.ShowDescription(id);
                 end
-                obj.CurrSignal=obj.SignalsTable(id,:);
+                row=find(obj.SignalsTable.ID==id);
+                obj.CurrSignal=obj.SignalsTable(row,:);
                 obj.Plotter.ShowSignal;
             end
         end
@@ -498,6 +500,7 @@ classdef Asker < handle
             stash.ID=obj.ID;
             stash.LockLabels=obj.LockLabels;
             stash.DAQ=Pack(obj.DAQ);
+            stash.UISwitchState=obj.UISwitch.Value;
             TMP=Pack(obj.Marker);
             
             stash.Marker=TMP;
@@ -511,6 +514,7 @@ classdef Asker < handle
             obj.ID=stash.ID;
             obj.LockLabels=stash.LockLabels;
             obj.DAQ.Populate(stash.DAQ);
+            obj.UISwitch.Value=stash.UISwitchState;
         end
         
     end

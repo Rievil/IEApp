@@ -57,7 +57,7 @@ classdef MyDAQ < handle
             % Configure DAQ ScansAvailableFcn callback function
             d.ScansAvailableFcn = @obj.M_scans;
             obj.DAQ=d;
-            obj.SamplingRate=obj.DAQ;
+            obj.SamplingRate=obj.DAQ.Rate;
             obj.MaxFreq=ceil(obj.DAQ.Rate*0.5);
             obj.CallbackTimeSpan = double(obj.DAQ.ScansAvailableFcnCount)/obj.DAQ.Rate;
         end
@@ -66,13 +66,13 @@ classdef MyDAQ < handle
             obj.UIPanel=panel;
             g=uigridlayout(obj.UIPanel);
             g.RowHeight = {25,25,25,25,'1x'};
-            g.ColumnWidth = {'1x',50};
+            g.ColumnWidth = {'1x','2x'};
 
             lab=uilabel(g,'Text','Duration (s):');
             lab.Layout.Row=1;
             lab.Layout.Column=1;
 
-            uid1=uieditfield(g,"numeric","Limits",[0.1,1],'ValueChangedFcn',@obj.MDurationChange,'Value',obj.CaptureDuration);
+            uid1=uieditfield(g,"numeric","Limits",[0.1,obj.ViewTimeWindow+obj.TriggerDelay],'ValueChangedFcn',@obj.MDurationChange,'Value',obj.CaptureDuration);
             uid1.Value=obj.CaptureDuration;
             uid1.Layout.Row=1;
             uid1.Layout.Column=2;
@@ -112,35 +112,40 @@ classdef MyDAQ < handle
         end
         
         function MDurationChange(obj,src,evnt)
-            obj.CaptureDuration=src.value;
+            obj.CaptureDuration=evnt.Value;
+            
         end
 
         function MTriggerChange(obj,src,evnt)
-            obj.TriggerLevel=src.value;
+            obj.TriggerLevel=evnt.Value;
         end
 
         function MSamplingRateChange(obj,src,evnt)
-            obj.DAQ.Rate=src.value;
-            src.value=obj.DAQ.Rate;
-            if obj.DAQ.Rate==src.value
-                fprintf("Device changed rate to %d Hz \n",obj.DAQ.Rate);
+            if obj.DAQ.Rate~=evnt.Value
+                stop(obj);
+                obj.DAQ.Rate=evnt.Value;
+                if obj.DAQ.Rate==evnt.Value
+                    fprintf("Device changed rate to %d Hz \n",obj.DAQ.Rate);
+                end
+    
+                obj.UIMaxFreq.Limits=[0.1,obj.DAQ.Rate/2];
+                if obj.UIMaxFreq.Value>ceil(obj.DAQ.Rate/2)
+                    obj.UIMaxFreq.Value=ceil(obj.DAQ.Rate/2);
+                    obj.MaxFreq=obj.UIMaxFreq.Value;
+                end
+                start(obj);
+                obj.SamplingRate=obj.DAQ.Rate;
             end
-
-            obj.UIMaxFreq.Limits=[0.1,obj.DAQ.Rate/2];
-            if obj.UIMaxFreq.Value>ceil(obj.DAQ.Rate/2)
-                obj.UIMaxFreq.Value=ceil(obj.DAQ.Rate/2);
-                obj.MaxFreq=obj.UIMaxFreq.Value;
-            end
-            obj.SamplingRate=obj.DAQ.Rate;
         end
 
         function MChangeMaxFreq(obj,src,evnt)
-            if evnt.value>obj.SamplingRate
+            if evnt.Value>obj.SamplingRate
                 obj.UIMaxFreq.Value=ceil(obj.DAQ.Rate/2);
                 maxfreq=ceil(obj.DAQ.Rate/2);
             end
             maxfreq=evnt.Value;
             obj.MaxFreq=maxfreq;
+            obj.Parent.Plotter.Update;
         end
 
         function stash=Pack(obj)
@@ -153,7 +158,6 @@ classdef MyDAQ < handle
             stash.AcData=obj.AcData;
             stash.TriggerType=obj.TriggerType;
             stash.MaxFreq=obj.MaxFreq;
-
         end
 
         function Populate(obj,stash)
@@ -165,6 +169,13 @@ classdef MyDAQ < handle
             obj.AcData=stash.AcData;
             obj.TriggerType=stash.TriggerType;
             obj.MaxFreq=stash.MaxFreq;
+
+            if obj.Parent.IsFig==true
+                obj.UIDuration.Value=obj.CaptureDuration;
+                obj.UITriggerVal.Value=obj.TriggerLevel;
+                obj.UISamplingRate.Value=obj.SamplingRate;
+                obj.UIMaxFreq.Value=obj.MaxFreq;
+            end
         end
 
 
@@ -183,7 +194,12 @@ classdef MyDAQ < handle
             start(obj.DAQ, "continuous");
         end
 
+        function stop(obj)
+            stop(obj.DAQ);
+        end
+
         function M_scans(obj,src,evnt)
+            warning('off','all');
             [data,timestamps] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
             % Store continuous acquisition data in FIFO data buffers
             obj.TimestampsFIFOBuffer = storeDataInFIFO(obj, obj.TimestampsFIFOBuffer, obj.BufferSize, timestamps);
@@ -241,6 +257,7 @@ classdef MyDAQ < handle
                         obj.CurrentState = 'Capture.LookingForTrigger';
                     end
             end
+            warning('on','all');
         end
 
     end

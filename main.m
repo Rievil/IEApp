@@ -1,12 +1,12 @@
-obj=MyDAQ('ss');
-%%
-obj.start;
-
-%%
 as=Asker();
 as.StartReading;
 
+%%
+
+ST=as.SignalsTable;
+DT=as.Marker.DescTable;
 
 %%
-delete(as);
+
+NT=innerjoin(ST,DT,'Keys','ID');
 
