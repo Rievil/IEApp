@@ -13,6 +13,7 @@ classdef MyDAQ < handle
         Parent;
         UIPanel;
         MaxFreq;
+        PickDevice;
     end
 
     properties (Hidden)
@@ -44,22 +45,17 @@ classdef MyDAQ < handle
     methods
         function obj=MyDAQ(parent)
             obj.Parent=parent;
-            obj.Devlist = daqlist;
-            idx=find(contains(obj.Devlist.Model,'carlett') & contains(obj.Devlist.Model,'ikrofon'));
-            deviceIndex = idx;
-            deviceID = obj.Devlist.DeviceID(deviceIndex);
-            vendor = obj.Devlist.DeviceInfo(deviceIndex).Vendor.ID;
-            measurementType=obj.Devlist.DeviceInfo(deviceIndex).Subsystems.DefaultMeasurementType;
-            
-            d = daq(vendor);
-            addinput(d, deviceID, 1, measurementType);
-           
-            % Configure DAQ ScansAvailableFcn callback function
+            obj.PickDevice=PickDevice(obj);
+        end
+
+        function SetDevice(obj,d)
+
             d.ScansAvailableFcn = @obj.M_scans;
             obj.DAQ=d;
             obj.SamplingRate=obj.DAQ.Rate;
             obj.MaxFreq=ceil(obj.DAQ.Rate*0.5);
             obj.CallbackTimeSpan = double(obj.DAQ.ScansAvailableFcnCount)/obj.DAQ.Rate;
+            obj.Parent.StartReading;
         end
 
         function DrawGUI(obj,panel)

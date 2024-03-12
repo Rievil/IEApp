@@ -55,6 +55,7 @@ classdef Asker < handle
             obj.Plotter=Plotter(obj);
             InitMarker(obj.Marker);
             obj.MyListener=addlistener(obj.DAQ,'SignalReady',@obj.GetData);
+            DrawGUI(obj.DAQ.PickDevice);
         end
         
         function id=get.CurrIDSel(obj)
