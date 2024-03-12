@@ -497,6 +497,7 @@ classdef Asker < handle
             stash.SignalsTable=obj.SignalsTable;
             stash.ID=obj.ID;
             stash.LockLabels=obj.LockLabels;
+            stash.DAQ=Pack(obj.DAQ);
             TMP=Pack(obj.Marker);
             
             stash.Marker=TMP;
@@ -509,6 +510,7 @@ classdef Asker < handle
             obj.Marker.Populate(stash.Marker);
             obj.ID=stash.ID;
             obj.LockLabels=stash.LockLabels;
+            obj.DAQ.Populate(stash.DAQ);
         end
         
     end

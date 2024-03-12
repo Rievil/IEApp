@@ -72,7 +72,7 @@ classdef MyDAQ < handle
             lab.Layout.Row=1;
             lab.Layout.Column=1;
 
-            uid1=uieditfield(g,"numeric","Limits",[0.1,1],'ValueChangedFcn',@obj.MDurationChange,'Value',obj.CaptureDuration);
+            uid1=uieditfield(g,"numeric","Limits",[0.1,1],'ValueChangedFcn',@obj.MDurationChange);
             uid1.Value=obj.CaptureDuration;
             uid1.Layout.Row=1;
             uid1.Layout.Column=2;
@@ -83,7 +83,7 @@ classdef MyDAQ < handle
             lab.Layout.Row=2;
             lab.Layout.Column=1;
 
-            uid2=uieditfield(g,"numeric","Limits",[0,1],'ValueChangedFcn',@obj.MTriggerChange,'Value',obj.TriggerLevel);
+            uid2=uieditfield(g,"numeric","Limits",[0,1],'ValueChangedFcn',@obj.MTriggerChange);
             uid2.Value=obj.TriggerLevel;
             uid2.Layout.Row=2;
             uid2.Layout.Column=2;
@@ -94,7 +94,7 @@ classdef MyDAQ < handle
             lab.Layout.Column=1;
 
 
-            uid3=uieditfield(g,"numeric","Limits",[0,192000],'ValueChangedFcn',@obj.MSamplingRateChange,'Value',obj.SamplingRate);
+            uid3=uieditfield(g,"numeric","Limits",[0,192000],'ValueChangedFcn',@obj.MSamplingRateChange);
             uid3.Value=obj.DAQ.Rate;
             uid3.Layout.Row=3;
             uid3.Layout.Column=2;
@@ -104,7 +104,7 @@ classdef MyDAQ < handle
             lab.Layout.Row=4;
             lab.Layout.Column=1;
 
-            uid4=uieditfield(g,"numeric","Limits",[0,obj.DAQ.Rate/2],'ValueChangedFcn',@obj.MChangeMaxFreq,'Value',obj.MaxFreq);
+            uid4=uieditfield(g,"numeric","Limits",[0,obj.DAQ.Rate/2]);
             uid4.Value=obj.MaxFreq;
             uid4.Layout.Row=4;
             uid4.Layout.Column=2;
@@ -127,46 +127,13 @@ classdef MyDAQ < handle
             end
 
             obj.UIMaxFreq.Limits=[0.1,obj.DAQ.Rate/2];
-            if obj.UIMaxFreq.Value>ceil(obj.DAQ.Rate/2)
-                obj.UIMaxFreq.Value=ceil(obj.DAQ.Rate/2);
-                obj.MaxFreq=obj.UIMaxFreq.Value;
+            if obj.UIMaxFreq.Value>obj.DAQ.Rate/2
+                obj.UIMaxFreq.Value=obj.DAQ.Rate/2;
             end
-            obj.SamplingRate=obj.DAQ.Rate;
-        end
-
-        function MChangeMaxFreq(obj,src,evnt)
-            if evnt.value>obj.SamplingRate
-                obj.UIMaxFreq.Value=ceil(obj.DAQ.Rate/2);
-                maxfreq=ceil(obj.DAQ.Rate/2);
-            end
-            maxfreq=evnt.Value;
-            obj.MaxFreq=maxfreq;
-        end
-
-        function stash=Pack(obj)
-            stash=struct;
-            stash.TriggerLevel=obj.TriggerLevel;
-            stash.TriggerDelay=obj.TriggerDelay;
-            stash.CaptureDuration=obj.CaptureDuration;
-            stash.ViewTimeWindow=obj.ViewTimeWindow;
-            stash.SamplingRate=obj.SamplingRate;
-            stash.AcData=obj.AcData;
-            stash.TriggerType=obj.TriggerType;
-            stash.MaxFreq=obj.MaxFreq;
 
         end
 
-        function Populate(obj,stash)
-            obj.TriggerLevel=stash.TriggerLevel;
-            obj.TriggerDelay=stash.TriggerDelay;
-            obj.CaptureDuration=stash.CaptureDuration;
-            obj.ViewTimeWindow=stash.ViewTimeWindow;
-            obj.SamplingRate=stash.SamplingRate;
-            obj.AcData=stash.AcData;
-            obj.TriggerType=stash.TriggerType;
-            obj.MaxFreq=stash.MaxFreq;
-        end
-
+        function 
 
 
 
