@@ -187,6 +187,9 @@ classdef Marker < Module
         
         function AddDescription(obj)
             T=GetNewDescRow(obj);
+            if size(obj.DescTable,1)==0
+                obj.DescTable=table();
+            end
             obj.DescTable=[obj.DescTable; T];
         end
         

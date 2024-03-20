@@ -82,7 +82,7 @@ classdef Plotter < Module
         
         function PlotOsc(obj)
             cla(obj.UIAx);
-            time=linspace(obj.TMPSignal.StartTime,obj.TMPSignal.EndTime,obj.TMPSignal.Samples)';
+            time=linspace(obj.TMPSignal.StartTime(1),obj.TMPSignal.EndTime(1),obj.TMPSignal.Samples)';
             y1=obj.TMPSignal.Signal{1};
             
             
@@ -128,7 +128,8 @@ classdef Plotter < Module
                     'HorizontalAlignment','left');
             end
 
-            legend(obj.UIAxFFT);
+            legend(obj.UIAxFFT,'Location','southoutside','NumColumns',2);
+
             xlim(obj.UIAxFFT,[60,obj.Parent.DAQ.MaxFreq]);
         end
 

@@ -380,7 +380,7 @@ classdef Asker < handle
                 if obj.LockLabels=='2'
                     obj.Marker.ShowDescription(id);
                 end
-                row=find(obj.SignalsTable.ID==id);
+                row=find(obj.SignalsTable.ID==id,1);
                 obj.CurrSignal=obj.SignalsTable(row,:);
                 obj.Plotter.ShowSignal;
             end
