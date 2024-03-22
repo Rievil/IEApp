@@ -51,8 +51,9 @@ classdef PickDevice < handle
                 measurementType=obj.Devlist.DeviceInfo(obj.RowDevice).Subsystems.DefaultMeasurementType;           
                 d = daq(vendor);
                 addinput(d, deviceID, 1, measurementType);
-                SetDevice(obj.Parent,d);
+                SetDevice(obj.Parent.DAQ,d);
                 close(obj.UIFig);
+                DrawFigure(obj.Parent);
             end
         end
 

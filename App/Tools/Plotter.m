@@ -82,8 +82,16 @@ classdef Plotter < Module
         
         function PlotOsc(obj)
             cla(obj.UIAx);
+            hold(obj.UIAx,'on');
+            grid(obj.UIAx,'on');
+            
+            trigger_y=[obj.Parent.DAQ.TriggerLevel,obj.Parent.DAQ.TriggerLevel];
+            trigger_x=[obj.TMPSignal.StartTime(1),obj.TMPSignal.EndTime(1)];
+
             time=linspace(obj.TMPSignal.StartTime(1),obj.TMPSignal.EndTime(1),obj.TMPSignal.Samples)';
             y1=obj.TMPSignal.Signal{1};
+
+            plot(obj.UIAx,trigger_x,trigger_y,'DisplayName',sprintf("Trigger %0.3f V",obj.Parent.DAQ.TriggerLevel));
             
             
             if obj.Parent.UISwitch.Value==1 || sum(obj.Parent.Marker.DescTable.ID==obj.TMPSignal.ID(1))>0

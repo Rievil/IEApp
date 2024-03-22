@@ -416,13 +416,15 @@ classdef Marker < Module
         end
         
         function val=GetCurrentDesc(obj,i)
-            type=obj.MarkerTable.Type{i}.Type;
+                type=obj.MarkerTable.Type{i}.Type;
             switch type 
                 case 'double'
                     val=obj.UIControls{i}.Value;
                 case 'string'
-                    val=obj.UIControls{i}.Items{obj.UIControls{i}.Value};
-                    
+                    val_tmp=cellstr(obj.UIControls{i}.Items{obj.UIControls{i}.Value});
+                    valset=cellstr (obj.MarkerTable.Type{i}.OutUnq);
+                    val=categorical(val_tmp,valset);
+                    % val=obj.UIControls{i}.Items{obj.UIControls{i}.Value};
                 case 'datetime'
                     val=obj.UIControls{i}.Value;
                     if isnat(val)

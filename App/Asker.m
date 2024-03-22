@@ -32,6 +32,7 @@ classdef Asker < handle
         MyListener;
         OutFilename='';
         SourceFilename;
+        PickDevice;
     end
     
     properties (Dependent)
@@ -43,7 +44,8 @@ classdef Asker < handle
     properties (Hidden)
         TSignalRow=0;
         LockLabels='2';
-
+        UIStartStop;
+        IF='App\Icons\'
     end
 
 
@@ -53,10 +55,13 @@ classdef Asker < handle
             obj.DAQ=MyDAQ(obj);
             obj.Marker = Marker(obj);
             obj.Plotter=Plotter(obj);
+            obj.PickDevice=PickDevice(obj);
             InitMarker(obj.Marker);
             obj.MyListener=addlistener(obj.DAQ,'SignalReady',@obj.GetData);
-            DrawGUI(obj.DAQ.PickDevice);
+            DrawGUI(obj.PickDevice);
         end
+
+        
         
         function id=get.CurrIDSel(obj)
             id=obj.TSignalRow;
@@ -95,10 +100,10 @@ classdef Asker < handle
 
         
         function StopReading(obj)
-            if obj.IsFig==true
-                stop(obj.DAQ);
-                delete(obj.Fig);
-            end
+            obj.DAQ.stop;
+            obj.DAQ.State='off';
+            obj.UIStartStop.Icon=[obj.IF 'StartMeas.gif'];
+            obj.UIStartStop.Tooltip='Start measurment (s)';
         end
         
 
@@ -113,14 +118,12 @@ classdef Asker < handle
         end
         
         function StartReading(obj)
-            if obj.IsFig==false
-               DrawFigure(obj);
-               
-               
-               SetControls(obj.Plotter);
-               obj.DAQ.start;
-            end
+           obj.DAQ.start;
+           obj.DAQ.State='on';
+           obj.UIStartStop.Icon=[obj.IF 'StopMeas.gif'];
+           obj.UIStartStop.Tooltip='Stop measurment (s)';
         end
+
         
         function T=SetTable(obj)
             T=table();
@@ -128,7 +131,9 @@ classdef Asker < handle
         
         function AddSignal(obj)
             if ~isempty(obj.CurrSignal)
-                
+                if size(obj.SignalsTable,1)==0
+                    obj.SignalsTable=table();
+                end
                 obj.CurrSignal=obj.TMPCurrSignal;
                 obj.SignalsTable=[obj.SignalsTable; obj.CurrSignal];
                 obj.Marker.AddDescription;
@@ -142,7 +147,17 @@ classdef Asker < handle
         
         function RefreshSignalTable(obj)
             obj.UISignalTable.Data=obj.Marker.DescTable;
-            
+            if size(obj.UISignalTable.Data,1)>0
+                edit_bool=zeros(1,size(obj.UISignalTable.Data,2));
+                for n=1:size(obj.UISignalTable.Data,2)
+                    if n>1
+                        edit_bool(n)=true;
+                    else
+                        edit_bool(n)=false;
+                    end
+                end
+                obj.UISignalTable.ColumnEditable=logical(edit_bool);
+            end
             opt={25};
             count=size(obj.Marker.DescTable,2);
             for i=1:count
@@ -240,11 +255,13 @@ classdef Asker < handle
             g.ColumnWidth = {300,'1x',250};
             
             tb = uitoolbar(obj.Fig);
-            IF='App\Icons\';
+            % obj.IF='App\Icons\';
             
-            pt1 = uipushtool(tb,'Icon',[IF 'SavingIcon.gif'],'Tooltip','Save measurement','ClickedCallback',@obj.MSaveMeas);
-            pt2 = uipushtool(tb,'Icon',[IF 'LoadMeas.gif'],'Tooltip','Load measurement','ClickedCallback',@obj.MLoadMeas);
+            pt0 = uipushtool(tb,'Icon',[obj.IF 'StartMeas.gif'],'Tooltip','Start measurment (s)','ClickedCallback',@obj.MStartStopMeasurment);
+            pt1 = uipushtool(tb,'Icon',[obj.IF 'SavingIcon.gif'],'Tooltip','Save measurement','ClickedCallback',@obj.MSaveMeas);
+            pt2 = uipushtool(tb,'Icon',[obj.IF 'LoadMeas.gif'],'Tooltip','Load measurement','ClickedCallback',@obj.MLoadMeas);
             pt3 = uipushtool(tb,'Tooltip','Change settings for channels','ClickedCallback',@obj.MChangeSettings);
+            obj.UIStartStop=pt0;
 
             lab=uilabel(g,'Text','Task executed:');
             lab.Layout.Row=1;
@@ -264,7 +281,7 @@ classdef Asker < handle
                 obj.SignalsTable=SetTable(obj);
             end
             
-            uit=uitable(g,'CellSelectionCallback',@obj.MSignalSelect);
+            uit=uitable(g,'CellSelectionCallback',@obj.MSignalSelect,'CellEditCallback',@obj.MSignalTableEditDesc);
             uit.Layout.Row=[2 3];
             uit.Layout.Column=1;
             obj.UISignalTable=uit;
@@ -340,6 +357,8 @@ classdef Asker < handle
 
             uitsw.Layout.Row=2;
             uitsw.Layout.Column=[1 3];
+
+            SetControls(obj.Plotter);
         end
         
         function CheckMemButton(obj)
@@ -349,7 +368,24 @@ classdef Asker < handle
                 obj.UIMemButton.Enable='off';
             end
         end
+
+        function MSignalTableEditDesc(obj,src,evnt)
+            obj.Marker.DescTable=obj.UISignalTable.Data;
+        end
         
+        function MStartStopMeasurment(obj,src,envt)
+            StartStopCheck(obj);
+        end
+
+        function StartStopCheck(obj)
+            switch obj.DAQ.State
+                case 'on'
+                    StopReading(obj);
+                case 'off'
+                    StartReading(obj);
+            end
+        end
+
         function MChangeSettings(obj,src,evnt)
               obj.Parent.Settings.DrawGui;
         end
@@ -392,7 +428,7 @@ classdef Asker < handle
         
         function MKeyCallback(obj,src,evnt)
             
-            switch evnt.Key
+            switch lower(evnt.Key)
                 case 'space'
                     if obj.UISwitch.Value==false
                         if ~isempty(obj.TMPCurrSignal)
@@ -421,6 +457,8 @@ classdef Asker < handle
                     disp('numpad8');
                 case 'numpad9'    
                     disp('numpad9');
+                case 's'
+                    StartStopCheck(obj);
             end
         end
         

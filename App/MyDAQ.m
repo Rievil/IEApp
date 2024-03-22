@@ -13,7 +13,7 @@ classdef MyDAQ < handle
         Parent;
         UIPanel;
         MaxFreq;
-        PickDevice;
+        State='off';
     end
 
     properties (Hidden)
@@ -45,17 +45,14 @@ classdef MyDAQ < handle
     methods
         function obj=MyDAQ(parent)
             obj.Parent=parent;
-            obj.PickDevice=PickDevice(obj);
         end
 
         function SetDevice(obj,d)
-
             d.ScansAvailableFcn = @obj.M_scans;
             obj.DAQ=d;
             obj.SamplingRate=obj.DAQ.Rate;
             obj.MaxFreq=ceil(obj.DAQ.Rate*0.5);
             obj.CallbackTimeSpan = double(obj.DAQ.ScansAvailableFcnCount)/obj.DAQ.Rate;
-            obj.Parent.StartReading;
         end
 
         function DrawGUI(obj,panel)
@@ -90,7 +87,8 @@ classdef MyDAQ < handle
             lab.Layout.Column=1;
 
 
-            uid3=uieditfield(g,"numeric","Limits",[0,192000],'ValueChangedFcn',@obj.MSamplingRateChange,'Value',obj.SamplingRate);
+            uid3=uieditfield(g,"numeric","Limits",[0,192000],'ValueChangedFcn',@obj.MSamplingRateChange,'Value',obj.SamplingRate,...
+                'ValueDisplayFormat','%d');
             uid3.Value=obj.DAQ.Rate;
             uid3.Layout.Row=3;
             uid3.Layout.Column=2;
@@ -100,7 +98,8 @@ classdef MyDAQ < handle
             lab.Layout.Row=4;
             lab.Layout.Column=1;
 
-            uid4=uieditfield(g,"numeric","Limits",[0,obj.DAQ.Rate/2],'ValueChangedFcn',@obj.MChangeMaxFreq,'Value',obj.MaxFreq);
+            uid4=uieditfield(g,"numeric","Limits",[0,obj.DAQ.Rate/2],'ValueChangedFcn',@obj.MChangeMaxFreq,'Value',obj.MaxFreq,...
+                'ValueDisplayFormat','%d');
             uid4.Value=obj.MaxFreq;
             uid4.Layout.Row=4;
             uid4.Layout.Column=2;
@@ -117,6 +116,7 @@ classdef MyDAQ < handle
         end
 
         function MSamplingRateChange(obj,src,evnt)
+            start_state=obj.State;
             if obj.DAQ.Rate~=evnt.Value
                 stop(obj);
                 obj.DAQ.Rate=evnt.Value;
@@ -129,7 +129,12 @@ classdef MyDAQ < handle
                     obj.UIMaxFreq.Value=ceil(obj.DAQ.Rate/2);
                     obj.MaxFreq=obj.UIMaxFreq.Value;
                 end
-                start(obj);
+
+                switch start_state
+                    case 'on'
+                        start(obj);
+                end
+
                 obj.SamplingRate=obj.DAQ.Rate;
             end
         end
@@ -173,12 +178,6 @@ classdef MyDAQ < handle
                 obj.UIMaxFreq.Value=obj.MaxFreq;
             end
         end
-
-
-
-
-
-        
 
         function start(obj)
             obj.TimestampsFIFOBuffer=[];
@@ -306,7 +305,8 @@ classdef MyDAQ < handle
             
             sig=struct;
             obj.AcData=table(timesam,{obj.CaptureData},obj.CaptureTimestamps(1),obj.CaptureTimestamps(end),...
-                freq,duration,samples,'VariableNames',["Time","Signal","StartTime","EndTime","SamplingFrequency","Duration","Samples",]);
+                freq,duration,samples,obj.TriggerLevel,obj.TriggerDelay,...
+                'VariableNames',["Time","Signal","StartTime","EndTime","SamplingFrequency","Duration","Samples","TriggerLevel","TriggerDelay"]);
 
             notify(obj,'SignalReady');
         end
