@@ -84,7 +84,7 @@ classdef Plotter < Module
             grid(obj.UIAx,'on');
             
             
-
+            %Trigger
             trigger_y=[obj.Parent.DAQ.TriggerLevel,obj.Parent.DAQ.TriggerLevel];
             trigger_x=[obj.TMPSignal.StartTime(1),obj.TMPSignal.EndTime(1)];
 
@@ -106,7 +106,8 @@ classdef Plotter < Module
             xlim(obj.UIAx,[time(1),time(end)]);
             obj.SigOvr=[max(y1)-min(y1)];
             
-            legend(obj.UIAx);
+            legend(obj.UIAx,'Location','northeast','NumColumns',2,'Color','none',...
+                'EdgeColor','none');
         end
         
         function PlotFFT(obj)

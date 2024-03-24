@@ -44,9 +44,14 @@ classdef Settings < Module
             g.ColumnWidth = {'1x'};
 
             tg = uitabgroup(g);
+            t3 = uitab(tg,"Title","Marker");
+            obj.Parent.Marker.DrawSettings(t3);
+
             t1 = uitab(tg,"Title","Plotter");
 
             t2 = uitab(tg,"Title","DAQ");
+
+
 
         end
         

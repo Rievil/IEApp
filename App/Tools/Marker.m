@@ -13,6 +13,7 @@ classdef Marker < Module
         UIDeskriptorPanel;
         DescTable table;
         UnqComb;
+        ClickEdit=1;
     end
     
     properties (Dependent)
@@ -335,6 +336,20 @@ classdef Marker < Module
             but2.Layout.Column=2;
 
         end
+
+        function DrawSettings(obj,tab)
+            g=uigridlayout(tab);
+            g.RowHeight = {25,'1x'};
+            g.ColumnWidth = {120,120,'1x'};
+
+            cbx = uicheckbox(g,'Text','Allow edit on click?','Value',obj.ClickEdit,'ValueChangedFcn',@obj.MClickEdit);
+            cbx.Layout.Row=1;
+            cbx.Layout.Column=[1 3];
+        end
+        
+        function MClickEdit(obj,src,evnt)
+            obj.ClickEdit=src.Value;
+        end
         
         function DrawStyle(obj)
             s = uistyle('BackgroundColor','yellow');
@@ -422,7 +437,7 @@ classdef Marker < Module
                     val=obj.UIControls{i}.Value;
                 case 'string'
                     val_tmp=cellstr(obj.UIControls{i}.Items{obj.UIControls{i}.Value});
-                    valset=cellstr (obj.MarkerTable.Type{i}.OutUnq);
+                    valset=cellstr (obj.MarkerTable.Type{i}.OutUnq)';
                     val=categorical(val_tmp,valset);
                     % val=obj.UIControls{i}.Items{obj.UIControls{i}.Value};
                 case 'datetime'
@@ -463,22 +478,24 @@ classdef Marker < Module
     methods %callbacks
         
         function MCChanged(obj,src,evnt)
-            ID=obj.Parent.CurrIDSel;
-            if ID>0
-                i=src.UserData;
-                type=obj.MarkerTable.Type{i}.Type;
-
-                switch type
-                    case 'double'
-                        obj.DescTable{ID,i+1}={src.Value};
-                    case 'string'
-                        obj.DescTable(ID,i+1)={src.Items{src.Value}};
-                    case 'datetime'
-                        obj.DescTable{ID,i+1}={src.Value};
-                    case 'text'
-                        obj.DescTable{ID,i+1}={src.Value};
+            if obj.ClickEdit==1
+                ID=obj.Parent.CurrIDSel;
+                if ID>0
+                    i=src.UserData;
+                    type=obj.MarkerTable.Type{i}.Type;
+    
+                    switch type
+                        case 'double'
+                            obj.DescTable{ID,i+1}={src.Value};
+                        case 'string'
+                            obj.DescTable(ID,i+1)={src.Items{src.Value}};
+                        case 'datetime'
+                            obj.DescTable{ID,i+1}={src.Value};
+                        case 'text'
+                            obj.DescTable{ID,i+1}={src.Value};
+                    end
+                    obj.Parent.RefreshSignalTable;
                 end
-                obj.Parent.RefreshSignalTable;
             end
         end
         
@@ -494,8 +511,10 @@ classdef Marker < Module
         end
         
         function MTableRowSelect(obj,src,evnt)
-            obj.IDCurrMarker=evnt.Indices(1);
-            DrawClassType(obj);
+            if numel(evnt.Indices)>0
+                obj.IDCurrMarker=evnt.Indices(1);
+                DrawClassType(obj);
+            end
         end
         
         function MRemoveDeskriptor(obj,src,~)

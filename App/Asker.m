@@ -33,6 +33,7 @@ classdef Asker < handle
         OutFilename='';
         SourceFilename;
         PickDevice;
+        TemplateName='Default';
     end
     
     properties (Dependent)
@@ -45,7 +46,8 @@ classdef Asker < handle
         TSignalRow=0;
         LockLabels='2';
         UIStartStop;
-        IF='App\Icons\'
+        IF='App\Icons\';
+        UITemplateField;
     end
 
 
@@ -134,10 +136,12 @@ classdef Asker < handle
         
         function AddSignal(obj)
             if ~isempty(obj.CurrSignal)
+                obj.ID=obj.ID+1;
                 if size(obj.SignalsTable,1)==0
                     obj.SignalsTable=table();
                 end
                 obj.CurrSignal=obj.TMPCurrSignal;
+                obj.CurrSignal.ID=obj.ID;
                 obj.SignalsTable=[obj.SignalsTable; obj.CurrSignal];
                 obj.Marker.AddDescription;
                 RefreshSignalTable(obj);
@@ -253,9 +257,10 @@ classdef Asker < handle
             dim=[Pix_SS(3)/2-obj.FigDim(1)/2,Pix_SS(4)/2-obj.FigDim(2)/2,obj.FigDim(1),obj.FigDim(2)];
             obj.Fig=uifigure('Position',dim,'CloseRequestFcn',@obj.MFigClosed,'WindowKeyPressFcn',@obj.MKeyCallback,...
                 'WindowStyle','normal');
+
             g=uigridlayout(obj.Fig);
             g.RowHeight = {25,100,'1x',25};
-            g.ColumnWidth = {300,'1x',250};
+            g.ColumnWidth = {100,200,'1x',250};
             
             tb = uitoolbar(obj.Fig);
             % obj.IF='App\Icons\';
@@ -263,18 +268,22 @@ classdef Asker < handle
             pt0 = uipushtool(tb,'Icon',[obj.IF 'StartMeas.gif'],'Tooltip','Start measurment (s)','ClickedCallback',@obj.MStartStopMeasurment);
             pt1 = uipushtool(tb,'Icon',[obj.IF 'SavingIcon.gif'],'Tooltip','Save measurement','ClickedCallback',@obj.MSaveMeas);
             pt2 = uipushtool(tb,'Icon',[obj.IF 'LoadMeas.gif'],'Tooltip','Load measurement','ClickedCallback',@obj.MLoadMeas);
-            pt3 = uipushtool(tb,'Tooltip','Change settings for channels','ClickedCallback',@obj.MChangeSettings);
+            pt3 = uipushtool(tb,'Icon',[obj.IF 'Settings.gif'],'Tooltip','Settings','ClickedCallback',@obj.MChangeSettings);
             obj.UIStartStop=pt0;
 
-            lab=uilabel(g,'Text','Task executed:');
+            lab=uilabel(g,'Text','Template:');
             lab.Layout.Row=1;
             lab.Layout.Column=1;
             obj.UIStatLabel=lab;
-            
+
+            uid2=uieditfield(g,"text",'ValueChangedFcn',@obj.MTemplateNameChange,'Value',obj.TemplateName);
+            uid2.Layout.Row=1;
+            uid2.Layout.Column=2;
+            obj.UITemplateField=uid2;
             
             swit=uiswitch(g,'Items',{'Automatic save','Manual save'},'ItemsData',{1,0});
             swit.Layout.Row=1;
-            swit.Layout.Column=2;
+            swit.Layout.Column=3;
             obj.UISwitch=swit;
             
             
@@ -286,20 +295,20 @@ classdef Asker < handle
             
             uit=uitable(g,'CellSelectionCallback',@obj.MSignalSelect,'CellEditCallback',@obj.MSignalTableEditDesc);
             uit.Layout.Row=[2 3];
-            uit.Layout.Column=1;
+            uit.Layout.Column=[1 2];
             obj.UISignalTable=uit;
             RefreshSignalTable(obj);
             
             but=uibutton(g,'Text','Show signal from memory','ButtonPushedFcn',@obj.MShowMemorySignal);
             but.Layout.Row=1;
-            but.Layout.Column=3;
+            but.Layout.Column=4;
             
             obj.UIMemButton=but;
             CheckMemButton(obj);
             
             p=uipanel(g,'Title','Signal description');
-            p.Layout.Row=3;
-            p.Layout.Column=3;
+            p.Layout.Row=[3 4];
+            p.Layout.Column=4;
             
             obj.Marker.SetFig(p);
             obj.Marker.DrawGui;
@@ -310,12 +319,12 @@ classdef Asker < handle
             
             
             p=uipanel(g);
-            p.Layout.Row=[2 3];
-            p.Layout.Column=2;
+            p.Layout.Row=[2 4];
+            p.Layout.Column=3;
             
             but3=uibutton(g,'Text','Remove signal (del)','ButtonPushedFcn',@obj.MRemoveSignal);
             but3.Layout.Row=4;
-            but3.Layout.Column=1;
+            but3.Layout.Column=[1 2];
 
             g3=uigridlayout(p);
             g3.RowHeight={'3x','2x'};
@@ -340,7 +349,7 @@ classdef Asker < handle
 
             p2=uipanel(g,'Title','Control panel');
             p2.Layout.Row=2;
-            p2.Layout.Column=3;
+            p2.Layout.Column=4;
             
             g2=uigridlayout(p2);
             g2.RowHeight = {25,25};
@@ -496,6 +505,10 @@ classdef Asker < handle
                 obj.Plotter.ShowSignal;
             end
         end
+
+        function MTemplateNameChange(obj,src,evnt)
+            obj.TemplateName=src.Value;
+        end
         
         
         function MFigClosed(obj,~,~)
@@ -504,10 +517,10 @@ classdef Asker < handle
         end
         
         function GetData(obj,src,evtdata)
-            obj.ID=obj.ID+1;
+            % obj.ID=obj.ID+1;
 
             obj.CurrSignal = obj.DAQ.AcData;
-            obj.CurrSignal.ID=obj.ID;
+            obj.CurrSignal.ID=0;
             obj.TMPCurrSignal=obj.CurrSignal;
             CheckMemButton(obj);
             
@@ -543,20 +556,31 @@ classdef Asker < handle
             stash.LockLabels=obj.LockLabels;
             stash.DAQ=Pack(obj.DAQ);
             stash.UISwitchState=obj.UISwitch.Value;
+            stash.TemplateName=obj.TemplateName;
             TMP=Pack(obj.Marker);
             
             stash.Marker=TMP;
         end
         
         function Populate(obj,stash)
-            
-            obj.CurrIDSel=stash.CurrIDSel;
-            obj.SignalsTable=stash.SignalsTable;
-            obj.Marker.Populate(stash.Marker);
-            obj.ID=stash.ID;
-            obj.LockLabels=stash.LockLabels;
-            obj.DAQ.Populate(stash.DAQ);
-            obj.UISwitch.Value=stash.UISwitchState;
+            proplist=["CurrIDSel","SignalsTable","Marker","ID","LockLabels","DAQ","UISwitchState","TemplateName"];
+            for field=proplist
+                if isfield(stash,field)
+                    switch field
+                        case 'Marker'
+                            obj.(field).Populate(stash.(field));
+                        case 'UISwitchState'
+                            obj.UISwitch.Value=stash.(field);
+                        case 'DAQ'
+                            obj.(field).Populate(stash.(field));
+                        case 'TemplateName'
+                            obj.(field)=stash.(field);
+                            obj.UITemplateField.Value=obj.(field);
+                        otherwise
+                            obj.(field)=stash.(field);
+                    end
+                end
+            end
         end
         
     end

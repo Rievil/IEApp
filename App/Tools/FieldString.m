@@ -152,7 +152,9 @@ classdef FieldString < Field
         end
         
         function MTableRowSelect(obj,src,evnt)
-            obj.IDRow=evnt.Indices(1);
+            if numel(evnt.Indices)>0
+                obj.IDRow=evnt.Indices(1);
+            end
         end
         
         function MTableChange(obj,~,~)

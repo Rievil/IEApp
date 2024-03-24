@@ -57,8 +57,8 @@ classdef MyDAQ < handle
         function DrawGUI(obj,panel)
             obj.UIPanel=panel;
             g=uigridlayout(obj.UIPanel);
-            g.RowHeight = {25,25,25,25,'1x'};
-            g.ColumnWidth = {'1x','2x'};
+            g.RowHeight = {25,25,25,40,25,'1x'};
+            g.ColumnWidth = {'1x',70};
 
             lab=uilabel(g,'Text','Duration (s):');
             lab.Layout.Row=1;
@@ -82,26 +82,30 @@ classdef MyDAQ < handle
             uid2.Layout.Column=2;
             obj.UITriggerVal=uid2;
 
-            lab=uilabel(g,'Text','Sampling rate (Hz):');
+            lab=uilabel(g,'Text','Sampling rate (kHz):');
             lab.Layout.Row=3;
-            lab.Layout.Column=1;
+            lab.Layout.Column=[1 2];
 
-
-            uid3=uieditfield(g,"numeric","Limits",[0,192000],'ValueChangedFcn',@obj.MSamplingRateChange,'Value',obj.SamplingRate,...
-                'ValueDisplayFormat','%d');
+            
+            uid3 = uislider(g,"Limits",[16000,192000],'ValueChangedFcn',@obj.MSamplingRateChange,'Value',obj.SamplingRate,...
+                'MajorTicks',[22050 32000 47250 88200 176400 192000],'MajorTickLabels',string([22 32 47 88 176 192]),...
+                'MinorTicks',[]);
+            % uid3=uieditfield(g,"numeric","Limits",[0,192000],'ValueChangedFcn',@obj.MSamplingRateChange,'Value',obj.SamplingRate,...
+            %     'ValueDisplayFormat','%d');
             uid3.Value=obj.DAQ.Rate;
-            uid3.Layout.Row=3;
-            uid3.Layout.Column=2;
+            uid3.Layout.Row=4;
+            uid3.Layout.Column=[1 2];
             obj.UISamplingRate=uid3;
 
             lab=uilabel(g,'Text','Max freq limit (Hz):');
-            lab.Layout.Row=4;
+            lab.Layout.Row=5;
             lab.Layout.Column=1;
-
+            
+            
             uid4=uieditfield(g,"numeric","Limits",[0,obj.DAQ.Rate/2],'ValueChangedFcn',@obj.MChangeMaxFreq,'Value',obj.MaxFreq,...
                 'ValueDisplayFormat','%d');
             uid4.Value=obj.MaxFreq;
-            uid4.Layout.Row=4;
+            uid4.Layout.Row=5;
             uid4.Layout.Column=2;
             obj.UIMaxFreq=uid4;
         end
@@ -120,8 +124,10 @@ classdef MyDAQ < handle
             if obj.DAQ.Rate~=evnt.Value
                 stop(obj);
                 obj.DAQ.Rate=evnt.Value;
+                src.Value=obj.DAQ.Rate;
                 if obj.DAQ.Rate==evnt.Value
                     fprintf("Device changed rate to %d Hz \n",obj.DAQ.Rate);
+                    
                 end
     
                 obj.UIMaxFreq.Limits=[0.1,obj.DAQ.Rate/2];
