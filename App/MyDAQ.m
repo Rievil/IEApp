@@ -6,13 +6,12 @@ classdef MyDAQ < handle
         CaptureDuration=0.5;
         ViewTimeWindow=1;
         SamplingRate;
-        AcData;
+        MaxFreq;
         TriggerType='Rising';
+        AcData;
         DAQ;
-        Han;
         Parent;
         UIPanel;
-        MaxFreq;
         State='off';
     end
 
@@ -65,7 +64,8 @@ classdef MyDAQ < handle
             lab.Layout.Row=1;
             lab.Layout.Column=1;
 
-            uid1=uieditfield(g,"numeric","Limits",[0.1,obj.ViewTimeWindow+obj.TriggerDelay],'ValueChangedFcn',@obj.MDurationChange,'Value',obj.CaptureDuration);
+            uid1=uieditfield(g,"numeric","Limits",[0.1,obj.ViewTimeWindow+obj.TriggerDelay],...
+                'ValueChangedFcn',@obj.MDurationChange,'Value',obj.CaptureDuration);
             uid1.Value=obj.CaptureDuration;
             uid1.Layout.Row=1;
             uid1.Layout.Column=2;
@@ -184,9 +184,8 @@ classdef MyDAQ < handle
             obj.DataFIFOBuffer=[];
             obj.calculateBufferSize(obj.CallbackTimeSpan, obj.ViewTimeWindow, obj.TriggerDelay, obj.CaptureDuration, obj.DAQ.Rate);
             obj.CurrentState = 'Acquisition.Buffering';
-            % obj.DrawGUI;
-            % start(obj.DAQ, "Duration", seconds(5));
             start(obj.DAQ, "continuous");
+            
         end
 
         function stop(obj)

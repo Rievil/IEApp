@@ -53,8 +53,6 @@ classdef Plotter < Module
                 hold(obj.UIAxFFT,'on');
                 xlabel(obj.UIAxFFT,'Frequency \it f \rm [Hz]');
                 ylabel(obj.UIAxFFT,'Amplitude \it A \rm [V]');
-                
-                % DrawGui(obj);
             end
         end
 
@@ -85,6 +83,8 @@ classdef Plotter < Module
             hold(obj.UIAx,'on');
             grid(obj.UIAx,'on');
             
+            
+
             trigger_y=[obj.Parent.DAQ.TriggerLevel,obj.Parent.DAQ.TriggerLevel];
             trigger_x=[obj.TMPSignal.StartTime(1),obj.TMPSignal.EndTime(1)];
 
@@ -136,7 +136,8 @@ classdef Plotter < Module
                     'HorizontalAlignment','left');
             end
 
-            legend(obj.UIAxFFT,'Location','southoutside','NumColumns',2);
+            legend(obj.UIAxFFT,'Location','northeast','NumColumns',2,'Color','none',...
+                'EdgeColor','none');
 
             xlim(obj.UIAxFFT,[60,obj.Parent.DAQ.MaxFreq]);
         end

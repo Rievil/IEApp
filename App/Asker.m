@@ -56,10 +56,13 @@ classdef Asker < handle
             obj.Marker = Marker(obj);
             obj.Plotter=Plotter(obj);
             obj.PickDevice=PickDevice(obj);
+            obj.Settings=Settings(obj);
+
             InitMarker(obj.Marker);
             obj.MyListener=addlistener(obj.DAQ,'SignalReady',@obj.GetData);
             DrawGUI(obj.PickDevice);
         end
+
 
         
         
@@ -387,7 +390,7 @@ classdef Asker < handle
         end
 
         function MChangeSettings(obj,src,evnt)
-              obj.Parent.Settings.DrawGui;
+              obj.Settings.DrawGui;
         end
         
         function MAddSignal(obj,src,~)
