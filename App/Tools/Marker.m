@@ -125,7 +125,13 @@ classdef Marker < Module
             Ts=table;
             for i=1:obj.Count
                 val=GetCurrentDesc(obj,i);
-                Tsx=table({val},'VariableNames',{char(obj.MarkerTable.Type{i}.Name)});
+                switch class(val)
+                    case 'categorical'
+                        valf=val;
+                    otherwise
+                        valf={val};
+                end
+                Tsx=table(valf,'VariableNames',{char(obj.MarkerTable.Type{i}.Name)});
                 Ts=[Ts, Tsx];
             end
         end
@@ -385,6 +391,7 @@ classdef Marker < Module
             stash.DescTable=obj.DescTable;
             stash.IDMainH=obj.IDMainH;
             stash.Count=obj.Count;
+            stash.ClickEdit=obj.ClickEdit;
             
             for i=1:obj.Count
                 TMP=Pack(obj.MarkerTable.Type{i});
@@ -396,6 +403,10 @@ classdef Marker < Module
             obj.MarkerTable=stash.MarkerTable;
             obj.DescTable=stash.DescTable;
             obj.IDMainH=stash.IDMainH;
+            
+            if isfield(stash,'ClickEdit')
+                obj.ClickEdit=stash.ClickEdit;
+            end
             
             for i=1:stash.Count
                 type=stash.MarkerTable.Type{i}.Type;
