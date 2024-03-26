@@ -28,7 +28,14 @@ sigs=[sig,sig2];
 %%
 
 dbfile = fullfile(pwd,"App\mysqlite.db"); 
-conn = sqlite(dbfile,"create")
+conn = sqlite(dbfile,"create");
+%%
+y = typecast(sig.Data, 'int32').';
+%%
+yi=format(y,'hex');
+%%
+yii=getByteStreamFromArray(sig.Data);
+% y = typecast(struct, 'int32').';
 
 %%
 dbfile = fullfile(pwd,"App\mysqlite.db");
@@ -47,6 +54,8 @@ results = table(sig.ID,{sig},'VariableNames',["ID","Signal"]);
 
 tablename = "Signals"; 
 sqlwrite(conn,tablename,results); 
+%%
+mksqlite( 'typedBLOBs', 1 );
 
 
 

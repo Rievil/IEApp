@@ -3,33 +3,47 @@ classdef SignalStorage < Module
     %   Detailed explanation goes here
     
     properties
-        DBFolder=':C\';
-        DBFilename;
-        Name='project1';
+        DBFile;
+        DBFolder;
+        DBName;
         IsInit=false;
         NSignal;
         NDescription;
         SignalTable;
         SignalDescriptionTable;
+        AssetTable;
         OutTable;
         UIFolder;
+    end
+
+    properties (Hidden)
+        IsConnected=0;
     end
     
     methods
         function obj = SignalStorage(parent)
             obj@Module(parent);
+        end
+        
+        function pickDB(obj)
+            [file,location] = uigetfile('*.db','Pick database file');
+            obj.DBFolder=location;
+            obj.DBName=file;
+            obj.DBName=sprintf("%s%s",location,file);
+        end
 
+        function connect(obj)
+            cur=cd;
+            cd(location);
+            db_name=sprintf("%s%s",location,file);
+            mksqlite( 'open', obj.DBName);
+            cd(cur);
+            obj.IsConnected=1;
         end
-        
-        function SetName(obj)
-           if exist(obj.DBFolder)
-              obj.DBFilename=[char(obj.DBFolder),'\',char(obj.Name),'.db'];
-           end
-        end
-        
-        function SetFolder(obj)
-            selpath = uigetdir(cd,'Select folder for saving .db file');
-            obj.DBFolder=selpath;
+
+        function close(obj)
+            mksqlite('close');
+            obj.IsConnected=0;
         end
         
         function InitDB(obj)
