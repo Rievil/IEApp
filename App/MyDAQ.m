@@ -13,6 +13,7 @@ classdef MyDAQ < handle
         Parent;
         UIPanel;
         State='off';
+        CurrentState;
     end
 
     properties (Hidden)
@@ -27,7 +28,7 @@ classdef MyDAQ < handle
         Ax;
         BufferTimeSpan;
         CallbackTimeSpan;
-        CurrentState;
+
         MeasureState;
         CaptureData;
         CaptureTimestamps;
