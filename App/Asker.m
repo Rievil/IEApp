@@ -448,7 +448,14 @@ classdef Asker < handle
                         end
                     end
                 case 'delete'
-                    RemoveSignal(obj);
+                    msg=sprintf('Delete signal ID: %d ?',obj.SignalsTable.ID(obj.CurrIDSel));
+                    selection = uiconfirm(obj.Fig,msg,'Delete signal',...
+                    'Icon','warning');
+                    switch selection
+                        case 'OK'
+                            RemoveSignal(obj);
+                        otherwise
+                    end
                 case 'numpad0'
                     disp('numpad0');
                 case 'numpad1'

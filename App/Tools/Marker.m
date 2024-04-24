@@ -161,13 +161,14 @@ classdef Marker < Module
                 descnames=DT.Properties.VariableNames;
 
                 for i=1:size(obj.MarkerTable,1)
-                    A=find(names==obj.MarkerTable.Name{i});
+                    A=contains(names,obj.MarkerTable.Name{i});
 
-                    Bi=find(string(obj.OldMarkerTable.DataType)==types(i));
+                    %Bi=contains(string(obj.OldMarkerTable.DataType),obj.MarkerTable.Name{i});
 
-                    if Bi>0 & sum(A)==1
+                    if sum(A)==1 && strcmp(string(obj.MarkerTable.DataType(i)),string(types(A)))
+                      
                         obj2=obj.MarkerTable.Type{A};
-                        ND.(descnames{i})=CheckUniformity(obj2,DT{:,i});
+                        ND.(obj.MarkerTable.Name{i})=CheckUniformity(obj2,DT{:,i});
                     else
                         obj2=obj.MarkerTable.Type{i};
                         ND.(obj.MarkerTable.Name(i))=obj2.EmptyCol(obj.Parent.Count);
