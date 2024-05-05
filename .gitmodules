@@ -1,0 +1,3 @@
+[submodule "App/MKSQLite"]
+	path = App/MKSQLite
+	url = https://github.com/a-ma72/mksqlite
