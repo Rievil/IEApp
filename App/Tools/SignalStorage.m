@@ -28,16 +28,22 @@ classdef SignalStorage < Module
         function pickDB(obj)
             [file,location] = uigetfile('*.db','Pick database file');
             obj.DBFolder=location;
-            obj.DBName=file;
+            obj.DBFile=file;
             obj.DBName=sprintf("%s%s",location,file);
         end
 
         function connect(obj)
-            cur=cd;
-            cd(location);
-            db_name=sprintf("%s%s",location,file);
-            mksqlite( 'open', obj.DBName);
-            cd(cur);
+            cur=[cd '\'];
+            if ~strcmp(obj.DBFolder,cur)
+                cd(location);
+            end
+
+            result=mksqlite( 'open', obj.DBFile);
+
+            if ~strcmp(obj.DBFolder,cur)
+                cd(cur);
+            end
+
             obj.IsConnected=1;
         end
 
@@ -67,6 +73,19 @@ classdef SignalStorage < Module
             
         end
 
+    end
+
+    methods (Access=private)
+        function result=exist_table(obj,tablename)
+            tables=mksqlite('show tables');
+            names=string({tables.tablename});
+            A=contains(tablename,names);
+            if sum(A)>0
+                result=true;
+            else
+                result=false;
+            end
+        end
     end
     
     methods %Abstract)

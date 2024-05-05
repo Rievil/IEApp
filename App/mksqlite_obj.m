@@ -9,25 +9,82 @@ close all;
 % cur=cd;
 % cd(location);
 % db_name=sprintf("%s%s",location,file);
-mksqlite( 'open', 'my_test.db');
+mksqlite( 'open', 'my_test2.db');
 % cd(cur);
 
 
 %% Creating tables
 
 %signal table
-sqlstr=['CREATE TABLE signal_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,',...
+
+mksqlite('Begin');
+sql_signal=['CREATE TABLE signal_table (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,',...
                                     'signal BLOB, sampling_rate INT, period NUMERIC, channels INT,', ...
                                     'time_start NUMERIC, time_end NUMERIC, samples INT, duration NUMERIC,',...
-                                    'trigger_value NUMERIC, pre_trigger_time NUMERIC, trigger_type INT,',...
-                                    'datetime TEXT)'];
+                                    'trigger_value NUMERIC, pre_trigger_time NUMERIC, trigger_type INT,sub_id INT,',...
+                                    'source_id INT, datetime TEXT)'];
 
-mksqlite(sqlstr);
-mksqlite('Begin');
+sql_asset=['CREATE TABLE asset (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT,',...
+           'data BLOB)'];
+
+sql_desc=['CREATE TABLE desc (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,',...
+                             'sig_id INT,',...
+                             'FOREIGN KEY(sig_id) REFERENCES signal_table(id))'];
+
+sql_source=['CREATE TABLE source_devices (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,',...
+                                    'driver_name TEXT, driver_version TEXT,',...
+                                    'device_name TEXT, datetime TEXT)'];
+
+
+
+mksqlite(sql_signal);
+mksqlite(sql_asset);
+% mksqlite(sql_desc);
+mksqlite(sql_source);
+
+
+% mksqlite('Commit');
+%%
+T=table(1,false,"A",40,0.25,'VariableNames',["Number","State","Mixture","Noms","Rate"]);
+names=string(T.Properties.VariableNames);
+
+sql_desc=['CREATE TABLE desc (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ',...
+                             'sig_id INT,'];
+
+for name=names
+    arr=T.(name);
+    var_name=class(arr);
+    switch var_name
+        case 'double'
+            line=sprintf('%s NUMERIC,',name);
+        case 'logical'
+            line=sprintf('%s BOOL,',name);
+        case 'string'
+            line=sprintf('%s TEXT,',name);
+        otherwise
+            disp(class(arr));
+    end
+    sql_desc=sprintf('%s %s\n',sql_desc,line);
+end
+sql_desc=sprintf('%s FOREIGN KEY(sig_id) REFERENCES signal_table(id))',sql_desc);
+disp(sql_desc);
+mksqlite(sql_desc);
 mksqlite('Commit');
+%% Create description table
+
+
+
 %%
 as.SignalsTable
+%% How to decide with which id should we insert?
+id=mksqlite('select seq from sqlite_sequence where name="signal_table"');
+if isempty(id)
+    disp('first id will be 1')
+else
+    fprintf("next id will be %d\n",id.seq+1);
+end
 %% Adding signals to signal table
+
 
 sqlstr=['INSERT INTO signal_table (signal, sampling_rate, period, channels,', ...
                                     'time_start, time_end, samples, duration,',...
@@ -59,6 +116,7 @@ mksqlite( 'typedBLOBs', 2 );
 mksqlite(sqlstr,signal,rate,period,channels,start_time,end_time,samples,duration,...
     trigger_value,pretrigger_time,trigger_type,date_time);
 
+id=mksqlite('select seq from sqlite_sequence where name="signal_table"');
 
 %% Inserting to the table blob data
 
@@ -78,5 +136,12 @@ mksqlite( 'INSERT INTO big_test_table (signals) VALUES (?)', sig );
 
 %% Retriving data
 query = mksqlite( 'SELECT * FROM signal_table' );
+%% Get list of tables in db
+tables=mksqlite('show tables');
+names=string({tables.tablename});
+
+
 %% Closing connection
 mksqlite('close');
+%%
+

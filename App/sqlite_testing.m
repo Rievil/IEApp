@@ -1,61 +1,39 @@
-
-rng("default");
-
-signal=rand(100000,1);
-
-fs=44000;
-period=1/fs;
-samples=numel(signal);
-duration=samples*period;
-time=linspace(0,duration,samples)'-0.05;
-
-sig=struct;
-sig.ID=1;
-sig.Data=signal;
-sig.SamplingFrequency=fs;
-sig.Period=period;
-sig.Duration=duration;
-sig.Time=[time(1),time(end)];
-sig.Samples=samples;
-sig.Time=datetime('now','format','dd.MM.yyyy HH:mm:ss.ss');
-
-
-sig2=sig;
-sig2.ID=2;
-
-sigs=[sig,sig2];
-
+%https://mksqlite.sourceforge.net/de/da3/detail_desc.html
+%Create or open database
+mksqlite('open', 'my_test.db');
+list=struct2table(mksqlite('show tables'));
+list.("tablename")=string(list.("tablename"));
+%%
+mksqlite('close');
 %%
 
-dbfile = fullfile(pwd,"App\mysqlite.db"); 
-conn = sqlite(dbfile,"create");
-%%
-y = typecast(sig.Data, 'int32').';
-%%
-yi=format(y,'hex');
-%%
-yii=getByteStreamFromArray(sig.Data);
-% y = typecast(struct, 'int32').';
+mksqlite('open','App\signal_storage.db3');
+% Creating tables
 
-%%
-dbfile = fullfile(pwd,"App\mysqlite.db");
-conn = sqlite(dbfile);
-%%
-sqlquery = strcat("CREATE TABLE Signals(ID PRIMARY_KEY INT, ", ...
-    "Signal BLOB)");
+%signal table
+sqlstr=['CREATE TABLE signal_table2 (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,',...
+                                    'signal BLOB, sampling_rate INT, period NUMERIC, channels INT,', ...
+                                    'time_start NUMERIC, time_end NUMERIC, samples INT, duration NUMERIC,',...
+                                    'trigger_value NUMERIC, pre_trigger_time NUMERIC, trigger_type INT,',...
+                                    'datetime TEXT)'];
 
-execute(conn,sqlquery);
-%%
-dbfile = fullfile(pwd,"App\mysqlite.db");
-conn = sqlite(dbfile);
+mksqlite(sqlstr);
+mksqlite('Begin');
+mksqlite('Commit');
+mksqlite('close');
+%% Get last id
+mksqlite( 'open', 'my_test.db');
+% sqlstr="SELECT seq FROM sqlite_sequence WHERE name=""signal_table""";
+% sqlstr="SELECT last_insert_rowid()";
+% mksqlite('DELETE FROM signal_table WHERE id>0;')
 
-
-results = table(sig.ID,{sig},'VariableNames',["ID","Signal"]); 
-
-tablename = "Signals"; 
-sqlwrite(conn,tablename,results); 
-%%
-mksqlite( 'typedBLOBs', 1 );
+%Getting last ID from table
+id=mksqlite('select seq from sqlite_sequence where name="signal_table"');
 
 
+% query = mksqlite( 'SELECT * FROM signal_table' );
 
+%Filtering by datetime
+query = mksqlite( 'SELECT * FROM signal_table WHERE datetime>"26.03.2024 18:33:00"');
+
+mksqlite('close');
