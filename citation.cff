@@ -1,5 +1,5 @@
 @software{IEApp,
-  author = {Richard Dvorak and Lubos Jakubka and Anna Nekorancova},
+  author = {Richard, Dvorak and Lubos, Jakubka and Anna, Nekorancova},
   doi = {10.5281/zenodo.12204656},
   month = {6},
   title = {{Application for acquiring Impact-Echo signals, labeling, and storing for laboratory and in-situ testing}},
