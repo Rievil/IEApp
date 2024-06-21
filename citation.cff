@@ -1,8 +1,8 @@
 @software{CrackPy,
-  author = {Richard Dvorak, Lubos Jakubka, Anna Nekorancova},
+  author = {Richard Dvorak and Lubos Jakubka and Anna Nekorancova},
   doi = {10.5281/zenodo.12204656},
   month = {6},
-  title = {{Aplication for acqurining Impact-Echo signals, labeling and storing for laboratory and in-situ testing}},
+  title = {{Application for acquiring Impact-Echo signals, labeling, and storing for laboratory and in-situ testing}},
   url = {https://github.com/Rievil/IEApp},
   version = {0.1.0},
   year = {2024}
