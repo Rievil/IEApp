@@ -36,6 +36,7 @@ classdef Settings < Module
         end
         
         function DrawGui(obj)
+            obj.FigBool=true;
             fig=uifigure('CloseRequestFcn',@obj.MCloseFig);
             obj.SetFig(fig);
             g=uigridlayout(obj.Fig);
@@ -75,6 +76,7 @@ classdef Settings < Module
         end
         
         function MCloseFig(obj,~,~)
+            obj.FigBool=false;
             obj.ClearGui;
             delete(obj.Fig);
         end

@@ -399,7 +399,9 @@ classdef Asker < handle
         end
 
         function MChangeSettings(obj,src,evnt)
+            if obj.Settings.FigBool==false
               obj.Settings.DrawGui;
+            end
         end
         
         function MAddSignal(obj,src,~)
