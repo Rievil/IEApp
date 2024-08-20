@@ -139,7 +139,7 @@ classdef Plotter < Module
 
             legend(obj.UIAxFFT,'Location','northeast','NumColumns',2,'Color','none',...
                 'EdgeColor','none');
-
+            ylim(obj.UIAxFFT,[min(y1),max(y1)*1.2]);
             xlim(obj.UIAxFFT,[60,obj.Parent.DAQ.MaxFreq]);
         end
 
