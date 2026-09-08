@@ -1,0 +1,8 @@
+# Minimal: reading IEApp *.mat files
+numpy>=1.24
+scipy>=1.10
+# Optional: DataFrames / CSV / parquet export (batch_to_dataframe.py, Measurement.to_dataframe)
+pandas>=2.0
+pyarrow>=14
+# Optional: plots in read_measurement.py
+matplotlib>=3.7

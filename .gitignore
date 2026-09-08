@@ -1,3 +1,9 @@
 # List of untracked files to ignore
 *.asv
 App/MyDAQ.asv
+
+# Python examples
+examples/python/__pycache__/
+examples/python/*.png
+examples/python/*.csv
+.DS_Store
