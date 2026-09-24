@@ -8,6 +8,7 @@ classdef PickDevice < handle
         Devlist;
         Data;
         RowDevice=0;
+        LastError='';
     end
 
     methods
@@ -19,8 +20,10 @@ classdef PickDevice < handle
         function RefreshDevlist(obj)
             try
                 obj.Devlist = daqlist;
+                obj.LastError='';
             catch err
                 obj.Devlist = table();
+                obj.LastError=err.message;
                 warning('IEApp:PickDevice:daqlist','Device enumeration failed: %s',err.message);
             end
         end
@@ -52,9 +55,15 @@ classdef PickDevice < handle
             if isempty(obj.Devlist)
                 obj.Data=table();
                 obj.UITable.Data=obj.Data;
-                uialert(obj.UIFig,['No measurement device was found. Connect the audio '...
-                    'interface or microphone and press "Refresh devices".'],...
-                    'No device found','Icon','warning');
+                if isempty(obj.LastError)
+                    msg=['No measurement device was found. Connect the audio '...
+                        'interface or microphone and press "Refresh devices". '...
+                        'If a device is connected, make sure the "Data Acquisition '...
+                        'Toolbox Support Package for Windows Sound Cards" is installed.'];
+                else
+                    msg=sprintf('Device enumeration failed:\n%s',obj.LastError);
+                end
+                uialert(obj.UIFig,msg,'No device found','Icon','warning');
             else
                 obj.Data=obj.Devlist(:,1:end-1);
                 obj.Data.Selected(:)=false;
