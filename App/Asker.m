@@ -46,7 +46,7 @@ classdef Asker < handle
         TSignalRow=0;
         LockLabels='2';
         UIStartStop;
-        IF='App\Icons\';
+        IF='';
         UITemplateField;
     end
 
@@ -54,6 +54,7 @@ classdef Asker < handle
     
     methods
         function obj = Asker()
+            obj.IF=fullfile(fileparts(mfilename('fullpath')),'Icons');
             obj.DAQ=MyDAQ(obj);
             obj.Marker = Marker(obj);
             obj.Plotter=Plotter(obj);
@@ -107,7 +108,7 @@ classdef Asker < handle
         function StopReading(obj)
             obj.DAQ.stop;
             obj.DAQ.State='off';
-            obj.UIStartStop.Icon=[obj.IF 'StartMeas.gif'];
+            obj.UIStartStop.Icon=fullfile(obj.IF,'StartMeas.gif');
             obj.UIStartStop.Tooltip='Start measurment (s)';
         end
         
@@ -125,7 +126,7 @@ classdef Asker < handle
         function StartReading(obj)
            obj.DAQ.start;
            obj.DAQ.State='on';
-           obj.UIStartStop.Icon=[obj.IF 'StopMeas.gif'];
+           obj.UIStartStop.Icon=fullfile(obj.IF,'StopMeas.gif');
            obj.UIStartStop.Tooltip='Stop measurment (s)';
         end
 
@@ -190,12 +191,11 @@ classdef Asker < handle
 
         function SaveMeas(obj)
             if numel(obj.OutFilename)<2
-                [file,path] = uiputfile('animinit.mat');
-                if exist(path)
-                    obj.OutFilename=[path, file];
-                else
-                    clear obj.OutFilename;
+                [file,path] = uiputfile('*.mat','Save measurement',DefaultMeasName(obj));
+                if isequal(file,0)
+                    return
                 end
+                obj.OutFilename=fullfile(path,file);
             else
                 txt=sprintf('Measuremnet already has a output file, do you want to save data into same file: %s ?',obj.OutFilename);
                 selection = uiconfirm(obj.Fig,txt,'Overwrite measurement?',...
@@ -203,41 +203,59 @@ classdef Asker < handle
                 switch selection
                     case 'OK'
                     otherwise
-                    [file,path] = uiputfile('animinit.mat');
-                    obj.OutFilename=[path, file];
+                    [file,path] = uiputfile('*.mat','Save measurement',DefaultMeasName(obj));
+                    if isequal(file,0)
+                        return
+                    end
+                    obj.OutFilename=fullfile(path,file);
                 end
             end
             message = sprintf('Saving measurement on path:%s',obj.OutFilename);
             d = uiprogressdlg(obj.Fig,'Title',message,'Indeterminate','on');
-    
-            
-%             uialert(,message,'Warning',...
-%             'Icon','info');
-            if numel(obj.OutFilename)>2
+            try
                 stash=Pack(obj);
-                
                 save(obj.OutFilename,'stash');
                 obj.SourceFilename=obj.OutFilename;
+                close(d);
+                uialert(obj.Fig,'Meas succesfully saved','Success','Icon','success');
+            catch err
+                close(d);
+                uialert(obj.Fig,sprintf('Saving failed:\n%s',err.message),'Save error','Icon','error');
             end
-            close(d);
-            
-            uialert(obj.Fig,'Meas succesfully saved','Success','Icon','success');
-%             close(message);
+        end
+
+        function name=DefaultMeasName(obj)
+            % Windows filenames must not contain < > : " / \ | ? * — sanitize the
+            % user-typed template name and keep the timestamp colon-free
+            template=regexprep(strtrim(obj.TemplateName),'[<>:"/\\|?*]','_');
+            if isempty(template)
+                template='measurement';
+            end
+            stamp=char(datetime('now','Format','yyyy-MM-dd_HH-mm-ss'));
+            name=sprintf('%s_%s.mat',template,stamp);
         end
         
         function LoadMeas(obj)
-            [file,path] = uigetfile('*.mat');
-            obj.SourceFilename=[path, file];
+            [file,path] = uigetfile('*.mat','Load measurement');
+            if isequal(file,0)
+                return
+            end
+            obj.SourceFilename=fullfile(path,file);
 
-            load(obj.SourceFilename);
+            try
+                S=load(obj.SourceFilename);
+            catch err
+                uialert(obj.Fig,sprintf('Loading failed:\n%s',err.message),'Load error','Icon','error');
+                return
+            end
 
-            if exist('stash','var')
-                obj.Populate(stash);
-                
+            if isfield(S,'stash')
+                obj.Populate(S.stash);
+
                 RefreshAfterLoad(obj);
                 obj.OutFilename=obj.SourceFilename;
             else
-                disp('This variable doesnt contain any TiePieSampler data');
+                uialert(obj.Fig,'This file doesnt contain any IEApp measurement data','Load error','Icon','warning');
             end
         end
 
@@ -263,12 +281,11 @@ classdef Asker < handle
             g.ColumnWidth = {100,200,'1x',250};
             
             tb = uitoolbar(obj.Fig);
-            % obj.IF='App\Icons\';
-            
-            pt0 = uipushtool(tb,'Icon',[obj.IF 'StartMeas.gif'],'Tooltip','Start measurment (s)','ClickedCallback',@obj.MStartStopMeasurment);
-            pt1 = uipushtool(tb,'Icon',[obj.IF 'SavingIcon.gif'],'Tooltip','Save measurement','ClickedCallback',@obj.MSaveMeas);
-            pt2 = uipushtool(tb,'Icon',[obj.IF 'LoadMeas.gif'],'Tooltip','Load measurement','ClickedCallback',@obj.MLoadMeas);
-            pt3 = uipushtool(tb,'Icon',[obj.IF 'Settings.gif'],'Tooltip','Settings','ClickedCallback',@obj.MChangeSettings);
+
+            pt0 = uipushtool(tb,'Icon',fullfile(obj.IF,'StartMeas.gif'),'Tooltip','Start measurment (s)','ClickedCallback',@obj.MStartStopMeasurment);
+            pt1 = uipushtool(tb,'Icon',fullfile(obj.IF,'SavingIcon.gif'),'Tooltip','Save measurement','ClickedCallback',@obj.MSaveMeas);
+            pt2 = uipushtool(tb,'Icon',fullfile(obj.IF,'LoadMeas.gif'),'Tooltip','Load measurement','ClickedCallback',@obj.MLoadMeas);
+            pt3 = uipushtool(tb,'Icon',fullfile(obj.IF,'Settings.gif'),'Tooltip','Settings','ClickedCallback',@obj.MChangeSettings);
             obj.UIStartStop=pt0;
 
             lab=uilabel(g,'Text','Template:');
@@ -450,6 +467,9 @@ classdef Asker < handle
                         end
                     end
                 case 'delete'
+                    if obj.CurrIDSel<1 || obj.CurrIDSel>obj.Count
+                        return
+                    end
                     msg=sprintf('Delete signal ID: %d ?',obj.SignalsTable.ID(obj.CurrIDSel));
                     selection = uiconfirm(obj.Fig,msg,'Delete signal',...
                     'Icon','warning');

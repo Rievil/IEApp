@@ -88,12 +88,14 @@ classdef MyDAQ < handle
             lab.Layout.Column=[1 2];
 
             
-            uid3 = uislider(g,"Limits",[16000,192000],'ValueChangedFcn',@obj.MSamplingRateChange,'Value',obj.SamplingRate,...
+            % Slider errors if Value falls outside Limits, so clamp the device rate
+            sliderRate=min(max(obj.DAQ.Rate,16000),192000);
+            uid3 = uislider(g,"Limits",[16000,192000],'ValueChangedFcn',@obj.MSamplingRateChange,'Value',sliderRate,...
                 'MajorTicks',[22050 32000 47250 88200 176400 192000],'MajorTickLabels',string([22 32 47 88 176 192]),...
                 'MinorTicks',[]);
             % uid3=uieditfield(g,"numeric","Limits",[0,192000],'ValueChangedFcn',@obj.MSamplingRateChange,'Value',obj.SamplingRate,...
             %     'ValueDisplayFormat','%d');
-            uid3.Value=obj.DAQ.Rate;
+            uid3.Value=sliderRate;
             uid3.Layout.Row=4;
             uid3.Layout.Column=[1 2];
             obj.UISamplingRate=uid3;
